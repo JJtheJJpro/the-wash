@@ -5,7 +5,7 @@ extern crate alloc;
 use alloc::{string::String, vec::Vec};
 use core::{fmt::Debug, str};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HtmlDoc<'a> {
     pub doc_type: Option<&'a str>,
     pub root: HtmlTree<'a>,
@@ -50,46 +50,46 @@ impl HtmlDoc<'_> {
         sb
     }
 }
-impl Debug for HtmlDoc<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        fn recurse(tree: &HtmlTree<'_>, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            match tree {
-                HtmlTree::Tag {
-                    name,
-                    attrs,
-                    children,
-                } => {
-                    write!(f, "<{name}")?;
-                    for attr in attrs {
-                        write!(f, " {}", attr.name)?;
-                        if let Some(v) = attr.value {
-                            write!(f, "={v}")?;
-                        }
-                    }
-                    write!(f, ">")?;
-
-                    for child in children {
-                        recurse(child, f)?;
-                    }
-
-                    write!(f, "</{name}>")
-                }
-                HtmlTree::Text(t) => {
-                    write!(f, "{t}")
-                }
-                _ => Ok(()),
-            }
-        }
-
-        if let Some(v) = self.doc_type {
-            write!(f, "<!DOCTYPE {v}>")?;
-        }
-
-        recurse(&self.root, f)?;
-
-        Ok(())
-    }
-}
+//impl Debug for HtmlDoc<'_> {
+//    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+//        fn recurse(tree: &HtmlTree<'_>, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+//            match tree {
+//                HtmlTree::Tag {
+//                    name,
+//                    attrs,
+//                    children,
+//                } => {
+//                    write!(f, "<{name}")?;
+//                    for attr in attrs {
+//                        write!(f, " {}", attr.name)?;
+//                        if let Some(v) = attr.value {
+//                            write!(f, "={v}")?;
+//                        }
+//                    }
+//                    write!(f, ">")?;
+//
+//                    for child in children {
+//                        recurse(child, f)?;
+//                    }
+//
+//                    write!(f, "</{name}>")
+//                }
+//                HtmlTree::Text(t) => {
+//                    write!(f, "{t}")
+//                }
+//                _ => Ok(()),
+//            }
+//        }
+//
+//        if let Some(v) = self.doc_type {
+//            write!(f, "<!DOCTYPE {v}>")?;
+//        }
+//
+//        recurse(&self.root, f)?;
+//
+//        Ok(())
+//    }
+//}
 
 #[derive(Clone, Debug)]
 pub struct Attribute<'a> {
@@ -237,6 +237,11 @@ pub fn parse_html<'a>(input: &'a str) -> HtmlDoc<'a> {
                                     children.push(HtmlTree::Text(
                                         str::from_utf8(&b[from..to]).unwrap(),
                                     ));
+                                    children.push(HtmlTree::Tag {
+                                        name: tag_name,
+                                        attrs: alloc::vec![],
+                                        children: alloc::vec![],
+                                    })
                                 } else {
                                     unreachable!();
                                 }
@@ -246,8 +251,6 @@ pub fn parse_html<'a>(input: &'a str) -> HtmlDoc<'a> {
                         }
                         from = p;
                         to = p;
-
-                        // recursive garbage...
 
                         flags.reset();
                     }
